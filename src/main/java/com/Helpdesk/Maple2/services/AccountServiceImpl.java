@@ -20,7 +20,7 @@ public class AccountServiceImpl implements AccountService {
     private AccountRepository accountRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Account account = accountRepository.findByUsername(username);
         if(account == null) {
             throw new UsernameNotFoundException("Username not found for " + username);
@@ -31,6 +31,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public Iterable<Account> findAll() {
+        return accountRepository.findAll();
+    }
+
+    @Override
     public Account save(Account account) {
         return accountRepository.save(account);
     }
@@ -38,5 +43,15 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account findByUsername(String username) {
         return accountRepository.findByUsername(username);
+    }
+
+    @Override
+    public void delete(int id) {
+        accountRepository.deleteById(id);
+    }
+
+    @Override
+    public Account find(int id) {
+        return accountRepository.findById(id).get();
     }
 }

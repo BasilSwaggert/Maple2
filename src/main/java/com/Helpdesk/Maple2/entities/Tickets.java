@@ -7,6 +7,7 @@ import java.util.Date;
 @Table(name = "tickets")
 public class Tickets implements java.io.Serializable {
 
+    private static final long serialVersionUID = 1L;
     @Id
     private Integer id;
     private Account accountByEmployeeId;

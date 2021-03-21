@@ -8,8 +8,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping(value = "account")
@@ -17,6 +19,12 @@ public class AccountController {
 
     @Autowired
     private AccountService accountService;
+
+    @RequestMapping(value = { "", "index" }, method = RequestMethod.GET)
+    public String index(ModelMap modelMap) {
+        modelMap.put("accounts", accountService.findAll());
+        return "account.index";
+    }
 
     //Authentication used here may be incorrect
     @RequestMapping(value = "profile", method = RequestMethod.GET)
@@ -36,5 +44,59 @@ public class AccountController {
         currentAccount.setPhone(account.getPhone());
         accountService.save(currentAccount);
         return "redirect:/account/profile";
+    }
+
+    @RequestMapping(value = "add", method = RequestMethod.GET)
+    public String add(ModelMap modelMap) {
+        Account account = new Account();
+        modelMap.put("account", account);
+        return "account.add";
+    }
+
+    @RequestMapping(value = "add", method = RequestMethod.POST)
+    public String add(@ModelAttribute("account") Account account, ModelMap modelMap) {
+        try {
+            account.setPassword(new BCryptPasswordEncoder().encode(account.getPassword()));
+            accountService.save(account);
+            return "redirect:/account";
+        } catch (Exception e) {
+            modelMap.put("error", "Creation Failed");
+            return "account.add";
+
+        }
+    }
+
+    @RequestMapping(value = "delete/{id}", method = RequestMethod.GET)
+    public String delete(@PathVariable("id") int id, RedirectAttributes redirectAttributes) {
+        try {
+            accountService.delete(id);
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Deletion Failed");
+        }
+        return "redirect:/account";
+    }
+
+    @RequestMapping(value = "edit/{id}", method = RequestMethod.GET)
+    public String edit(@PathVariable("id") int id, ModelMap modelMap) {
+        Account account = accountService.find(id);
+        modelMap.put("account", account);
+        return "account.edit";
+    }
+
+    @RequestMapping(value = "edit", method = RequestMethod.POST)
+    public String edit(@ModelAttribute("account") Account account, ModelMap modelMap) {
+        try {
+            if (account.getPassword().isEmpty()) {
+                account.setPassword(accountService.find(account.getId()).getPassword());
+            } else {
+                account.setPassword(new BCryptPasswordEncoder().encode(account.getPassword()));
+            }
+            accountService.save(account);
+            return "redirect:/account";
+        } catch (Exception e) {
+            modelMap.put("error", "Update Failed");
+            modelMap.put("account", account);
+            return "account.edit";
+        }
     }
 }
